@@ -50,6 +50,7 @@
   --ring: oklch(0.62 0.18 268);
 
   --shadow-soft: 0 2px 16px rgba(82, 110, 246, 0.08);
+  --shadow-elevated: 0 20px 50px -20px rgba(82, 110, 246, 0.25), 0 8px 20px -10px rgba(139, 92, 246, 0.15);
 }
 
 @keyframes fade-in {

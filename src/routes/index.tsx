@@ -11,9 +11,11 @@ import {
   Map,
   Target,
   Compass,
+  Send,
 } from "lucide-react";
 import yuliaPhoto from "@/assets/yulia.jpg";
 import stafflowLogo from "@/assets/stafflow-logo.png";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -35,9 +37,11 @@ function Index() {
   const [status, setStatus] = useState<"yes" | "no" | "">("");
   const [count, setCount] = useState(1);
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [errors, setErrors] = useState<{ name?: boolean; status?: boolean }>({});
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const newErrors: typeof errors = {};
     if (!name.trim()) newErrors.name = true;
@@ -47,30 +51,73 @@ function Index() {
       return;
     }
     setErrors({});
+    setSubmitError(null);
+    setSubmitting(true);
+    const { error } = await supabase.from("registrations").insert({
+      name: name.trim(),
+      company: company.trim() || null,
+      status,
+      attendee_count: status === "yes" ? count : 1,
+    });
+    setSubmitting(false);
+    if (error) {
+      setSubmitError("Не удалось отправить. Попробуйте ещё раз.");
+      return;
+    }
     setSubmitted(true);
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      {/* Navbar */}
-      <header className="mx-auto flex max-w-5xl items-center justify-between px-6 py-6">
-        <div className="text-lg font-semibold tracking-tight">Закрытый воркшоп</div>
-        <img src={stafflowLogo} alt="Stafflow" className="h-5 w-auto sm:h-6" />
+    <div className="relative min-h-screen overflow-hidden bg-background text-foreground">
+      {/* Decorative background blobs */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-40 left-1/2 h-[520px] w-[520px] -translate-x-1/2 rounded-full opacity-60 blur-3xl"
+        style={{
+          background:
+            "radial-gradient(circle, color-mix(in oklab, var(--primary) 35%, transparent) 0%, transparent 70%)",
+        }}
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute top-[40%] -right-32 h-[380px] w-[380px] rounded-full opacity-40 blur-3xl"
+        style={{
+          background:
+            "radial-gradient(circle, color-mix(in oklab, var(--primary) 30%, transparent) 0%, transparent 70%)",
+        }}
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute bottom-0 -left-32 h-[360px] w-[360px] rounded-full opacity-40 blur-3xl"
+        style={{
+          background:
+            "radial-gradient(circle, #ffd6e8 0%, transparent 70%)",
+        }}
+      />
+
+      {/* Navbar — logo centered */}
+      <header className="relative mx-auto flex max-w-5xl items-center justify-center px-6 py-6">
+        <img src={stafflowLogo} alt="Stafflow" className="h-6 w-auto sm:h-7" />
       </header>
 
       {/* Hero */}
-      <section className="mx-auto max-w-3xl px-6 pt-10 pb-16 text-center sm:pt-16 sm:pb-24">
+      <section className="relative mx-auto max-w-3xl px-6 pt-8 pb-16 text-center sm:pt-14 sm:pb-24">
         <div
-          className="mb-6 inline-block text-xs font-medium uppercase tracking-[0.2em]"
-          style={{ color: "var(--primary)" }}
+          className="mb-6 inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-xs font-medium uppercase tracking-[0.2em]"
+          style={{
+            color: "var(--primary)",
+            borderColor: "color-mix(in oklab, var(--primary) 25%, transparent)",
+            backgroundColor: "color-mix(in oklab, var(--primary) 6%, white)",
+          }}
         >
+          <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ backgroundColor: "var(--primary)" }} />
           Воркшоп для сообщества Stafflow
         </div>
         <h1
           className="text-4xl font-semibold tracking-tight sm:text-6xl sm:leading-[1.05]"
           style={{
             background:
-              "linear-gradient(135deg, var(--primary) 0%, color-mix(in oklab, var(--primary) 60%, var(--foreground)) 100%)",
+              "linear-gradient(135deg, var(--primary) 0%, #8b5cf6 50%, #ec4899 100%)",
             WebkitBackgroundClip: "text",
             WebkitTextFillColor: "transparent",
             backgroundClip: "text",
@@ -84,49 +131,73 @@ function Index() {
         </p>
 
         <div
-          className="mx-auto mt-10 flex max-w-md items-center gap-4 rounded-xl bg-card p-4 text-left"
-          style={{ boxShadow: "var(--shadow-soft)" }}
+          className="mx-auto mt-10 flex max-w-md items-center gap-4 rounded-2xl border bg-card/80 p-4 text-left backdrop-blur"
+          style={{
+            boxShadow: "var(--shadow-elevated)",
+            borderColor: "color-mix(in oklab, var(--primary) 15%, transparent)",
+          }}
         >
           <img
             src={yuliaPhoto}
             alt="Юлия Карват"
-            className="h-14 w-14 shrink-0 rounded-full object-cover"
+            className="h-14 w-14 shrink-0 rounded-full object-cover ring-2 ring-offset-2"
+            style={{ ["--tw-ring-color" as string]: "var(--primary)" }}
           />
-          <div>
+          <div className="flex-1">
             <div className="text-base font-medium">Юлия Карват</div>
             <div className="mt-0.5 text-xs text-muted-foreground">
               Корпоративный тренер · HR-эксперт
             </div>
           </div>
+          <a
+            href="https://t.me/hr_kuluar"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium text-white transition hover:brightness-110"
+            style={{ background: "linear-gradient(135deg, #229ED9, #2AABEE)" }}
+          >
+            <Send className="h-3.5 w-3.5" />
+            Telegram
+          </a>
         </div>
       </section>
 
       {/* About */}
-      <section className="mx-auto max-w-5xl px-6 pb-20">
+      <section className="relative mx-auto max-w-5xl px-6 pb-20">
         <h2 className="text-center text-2xl font-semibold tracking-tight sm:text-3xl">
           О чём этот воркшоп
         </h2>
         <div className="mt-10 grid gap-5 md:grid-cols-3">
           {[
             {
-              icon: <MessageCircle className="h-5 w-5" style={{ color: "var(--primary)" }} />,
+              icon: <MessageCircle className="h-5 w-5 text-white" />,
               text: "Почему бизнес вас не слышит — даже когда вы приносите правильные цифры и логичные стратегии",
             },
             {
-              icon: <Brain className="h-5 w-5" style={{ color: "var(--primary)" }} />,
+              icon: <Brain className="h-5 w-5 text-white" />,
               text: "Как устроено мышление собственника и по каким правилам строится диалог HR-партнёра с C-level",
             },
             {
-              icon: <Search className="h-5 w-5" style={{ color: "var(--primary)" }} />,
+              icon: <Search className="h-5 w-5 text-white" />,
               text: "Когда ситуацию можно исправить, а когда не стоит даже пытаться",
             },
           ].map((c, i) => (
             <div
               key={i}
-              className="rounded-xl bg-card p-6"
-              style={{ boxShadow: "var(--shadow-soft)" }}
+              className="group relative rounded-2xl border bg-card p-6 transition hover:-translate-y-1"
+              style={{
+                boxShadow: "var(--shadow-soft)",
+                borderColor: "color-mix(in oklab, var(--primary) 10%, transparent)",
+              }}
             >
-              <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-background">
+              <div
+                className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl shadow-lg"
+                style={{
+                  background:
+                    "linear-gradient(135deg, var(--primary), #8b5cf6)",
+                  boxShadow: "0 8px 20px -8px var(--primary)",
+                }}
+              >
                 {c.icon}
               </div>
               <p className="text-sm leading-relaxed">{c.text}</p>
@@ -139,7 +210,7 @@ function Index() {
       </section>
 
       {/* Program */}
-      <section className="mx-auto max-w-3xl px-6 pb-20">
+      <section className="relative mx-auto max-w-3xl px-6 pb-20">
         <div className="text-center">
           <div
             className="mb-3 inline-block text-xs font-medium uppercase tracking-[0.2em]"
@@ -167,14 +238,17 @@ function Index() {
           ].map((item, i) => (
             <li
               key={i}
-              className="flex items-center gap-4 rounded-xl bg-card px-5 py-4"
-              style={{ boxShadow: "var(--shadow-soft)" }}
+              className="flex items-center gap-4 rounded-2xl border bg-card px-5 py-4 transition hover:translate-x-1"
+              style={{
+                boxShadow: "var(--shadow-soft)",
+                borderColor: "color-mix(in oklab, var(--primary) 10%, transparent)",
+              }}
             >
               <span
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sm font-semibold"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-bold text-white shadow-md"
                 style={{
-                  backgroundColor: "color-mix(in oklab, var(--primary) 12%, white)",
-                  color: "var(--primary)",
+                  background:
+                    "linear-gradient(135deg, var(--primary), #8b5cf6)",
                 }}
               >
                 {i + 1}
@@ -186,7 +260,7 @@ function Index() {
       </section>
 
       {/* Benefits */}
-      <section className="mx-auto max-w-5xl px-6 pb-20">
+      <section className="relative mx-auto max-w-5xl px-6 pb-20">
         <div className="text-center">
           <div
             className="mb-3 inline-block text-xs font-medium uppercase tracking-[0.2em]"
@@ -202,32 +276,42 @@ function Index() {
         <div className="mt-10 grid gap-5 md:grid-cols-2">
           {[
             {
-              icon: <Sparkles className="h-5 w-5" style={{ color: "var(--primary)" }} />,
+              icon: <Sparkles className="h-5 w-5 text-white" />,
               title: "Понимание себя как HR",
               text: "Самодиагностика по типологии: свои сильные стороны, зоны риска и точки роста в роли HR-партнёра.",
+              gradient: "linear-gradient(135deg, var(--primary), #8b5cf6)",
             },
             {
-              icon: <Compass className="h-5 w-5" style={{ color: "var(--primary)" }} />,
+              icon: <Compass className="h-5 w-5 text-white" />,
               title: "Карта собственников",
               text: "Научитесь распознавать тип собственника и подбирать язык, на котором он действительно вас услышит.",
+              gradient: "linear-gradient(135deg, #8b5cf6, #ec4899)",
             },
             {
-              icon: <Target className="h-5 w-5" style={{ color: "var(--primary)" }} />,
+              icon: <Target className="h-5 w-5 text-white" />,
               title: "Матрица совместимости",
               text: "Поймёте, где ваш диалог с бизнесом может работать, а где это системный конфликт, который не решить уговорами.",
+              gradient: "linear-gradient(135deg, #ec4899, #f59e0b)",
             },
             {
-              icon: <Map className="h-5 w-5" style={{ color: "var(--primary)" }} />,
+              icon: <Map className="h-5 w-5 text-white" />,
               title: "Личный roadmap",
               text: "Конкретный план шагов: как перестроить коммуникацию с собственником и быть услышанным на уровне решений.",
+              gradient: "linear-gradient(135deg, #06b6d4, var(--primary))",
             },
           ].map((b, i) => (
             <div
               key={i}
-              className="rounded-xl bg-card p-6"
-              style={{ boxShadow: "var(--shadow-soft)" }}
+              className="rounded-2xl border bg-card p-6 transition hover:-translate-y-1"
+              style={{
+                boxShadow: "var(--shadow-soft)",
+                borderColor: "color-mix(in oklab, var(--primary) 10%, transparent)",
+              }}
             >
-              <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-background">
+              <div
+                className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl shadow-lg"
+                style={{ background: b.gradient }}
+              >
                 {b.icon}
               </div>
               <h3 className="text-base font-semibold">{b.title}</h3>
@@ -238,61 +322,98 @@ function Index() {
       </section>
 
       {/* Speaker */}
-      <section className="mx-auto max-w-4xl px-6 pb-20">
-        <div className="grid items-center gap-8 sm:grid-cols-[auto_1fr] sm:gap-12">
-          <img
-            src={yuliaPhoto}
-            alt="Юлия Карват"
-            className="mx-auto h-44 w-44 rounded-full object-cover sm:h-52 sm:w-52"
-            style={{ boxShadow: "var(--shadow-soft)" }}
-          />
-          <div>
-            <h3 className="text-2xl font-semibold tracking-tight">Юлия Карват</h3>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Корпоративный тренер · HR-эксперт · Магистр психологических наук
-            </p>
-            <ul className="mt-5 space-y-3 text-sm text-foreground/90">
-              {[
-                "12+ лет рефакторинга команд и процессов",
-                "Тренер первых лиц бизнеса и HR-команд (alfa hub, andersen, igrow)",
-                "Автор статей: Habr, Probusiness, Officelife, «Кадровая служба», «Генеральный директор»",
-                "Автор Telegram-канала HR Kuluar",
-              ].map((b, i) => (
-                <li key={i} className="flex gap-3">
-                  <span
-                    className="mt-2 inline-block h-1.5 w-1.5 shrink-0 rounded-full"
-                    style={{ backgroundColor: "var(--primary)" }}
-                  />
-                  <span>{b}</span>
-                </li>
-              ))}
-            </ul>
+      <section className="relative mx-auto max-w-4xl px-6 pb-20">
+        <div
+          className="rounded-3xl border bg-card/80 p-8 backdrop-blur sm:p-12"
+          style={{
+            boxShadow: "var(--shadow-elevated)",
+            borderColor: "color-mix(in oklab, var(--primary) 12%, transparent)",
+          }}
+        >
+          <div className="grid items-center gap-8 sm:grid-cols-[auto_1fr] sm:gap-12">
+            <div className="relative mx-auto">
+              <div
+                aria-hidden
+                className="absolute -inset-2 rounded-full blur-xl opacity-60"
+                style={{
+                  background:
+                    "linear-gradient(135deg, var(--primary), #ec4899)",
+                }}
+              />
+              <img
+                src={yuliaPhoto}
+                alt="Юлия Карват"
+                className="relative h-44 w-44 rounded-full object-cover sm:h-52 sm:w-52"
+              />
+            </div>
+            <div>
+              <h3 className="text-2xl font-semibold tracking-tight">Юлия Карват</h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Корпоративный тренер · HR-эксперт · Магистр психологических наук
+              </p>
+              <ul className="mt-5 space-y-3 text-sm text-foreground/90">
+                {[
+                  "12+ лет рефакторинга команд и процессов",
+                  "Тренер первых лиц бизнеса и HR-команд (alfa hub, andersen, igrow)",
+                  "Автор статей: Habr, Probusiness, Officelife, «Кадровая служба», «Генеральный директор»",
+                  "Автор Telegram-канала HR Kuluar",
+                ].map((b, i) => (
+                  <li key={i} className="flex gap-3">
+                    <span
+                      className="mt-2 inline-block h-1.5 w-1.5 shrink-0 rounded-full"
+                      style={{ backgroundColor: "var(--primary)" }}
+                    />
+                    <span>{b}</span>
+                  </li>
+                ))}
+              </ul>
+              <a
+                href="https://t.me/hr_kuluar"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-6 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-white transition hover:brightness-110"
+                style={{ background: "linear-gradient(135deg, #229ED9, #2AABEE)" }}
+              >
+                <Send className="h-4 w-4" />
+                Telegram-канал HR Kuluar
+              </a>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Registration */}
-      <section className="mx-auto max-w-2xl px-6 pb-24">
+      <section className="relative mx-auto max-w-2xl px-6 pb-24">
         <div
-          className="rounded-xl bg-card p-6 sm:p-10"
-          style={{ boxShadow: "var(--shadow-soft)" }}
+          className="relative overflow-hidden rounded-3xl border bg-card p-6 sm:p-10"
+          style={{
+            boxShadow: "var(--shadow-elevated)",
+            borderColor: "color-mix(in oklab, var(--primary) 15%, transparent)",
+          }}
         >
-          <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+          <div
+            aria-hidden
+            className="absolute -top-20 -right-20 h-48 w-48 rounded-full opacity-40 blur-3xl"
+            style={{
+              background:
+                "radial-gradient(circle, color-mix(in oklab, var(--primary) 50%, transparent), transparent)",
+            }}
+          />
+          <h2 className="relative text-2xl font-semibold tracking-tight sm:text-3xl">
             Подтвердите своё участие
           </h2>
-          <p className="mt-3 text-sm text-muted-foreground">
-            Места ограничены. Мы бронируем их персонально для каждого участника сообщества.
-          </p>
 
           {submitted ? (
             <div
-              className="mt-8 rounded-xl bg-background p-5 text-sm font-medium"
-              style={{ color: "var(--primary)", boxShadow: "var(--shadow-soft)" }}
+              className="relative mt-8 rounded-2xl p-5 text-sm font-medium text-white"
+              style={{
+                background: "linear-gradient(135deg, var(--primary), #8b5cf6)",
+              }}
             >
               ✓ Спасибо! Мы зафиксировали вашу регистрацию. Детали воркшопа придут вам отдельно.
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="mt-8 space-y-6" noValidate>
+            <form onSubmit={handleSubmit} className="relative mt-8 space-y-6" noValidate>
               <div>
                 <label className="mb-2 block text-sm font-medium">
                   Имя и фамилия <span style={{ color: "var(--primary)" }}>*</span>
@@ -392,13 +513,23 @@ function Index() {
                 </div>
               )}
 
+              {submitError && (
+                <p className="text-sm" style={{ color: "#ef4444" }}>{submitError}</p>
+              )}
+
               <button
                 type="submit"
-                className="w-full rounded-xl bg-primary px-6 py-3.5 text-sm font-medium text-primary-foreground transition hover:brightness-95 sm:w-auto sm:min-w-56"
+                disabled={submitting}
+                className="w-full rounded-xl px-6 py-3.5 text-sm font-medium text-white shadow-lg transition hover:brightness-110 disabled:opacity-60 sm:w-auto sm:min-w-56"
+                style={{
+                  background:
+                    "linear-gradient(135deg, var(--primary), #8b5cf6)",
+                  boxShadow: "0 10px 24px -10px var(--primary)",
+                }}
               >
                 <span className="inline-flex items-center justify-center gap-2">
                   <Check className="h-4 w-4" />
-                  Подтвердить участие
+                  {submitting ? "Отправляем…" : "Подтвердить участие"}
                 </span>
               </button>
             </form>
@@ -407,7 +538,7 @@ function Index() {
       </section>
 
       {/* Footer */}
-      <footer className="px-6 pb-10">
+      <footer className="relative px-6 pb-10">
         <p className="text-center text-xs text-muted-foreground">
           © 2026 Stafflow · Закрытое мероприятие для сообщества платформы
         </p>
