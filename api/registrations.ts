@@ -217,12 +217,28 @@ async function appendViaServiceAccount(payload: RegistrationPayload) {
 async function appendRegistration(payload: RegistrationPayload) {
   const webhookUrl = getEnv("GOOGLE_SHEETS_WEBHOOK_URL");
   if (webhookUrl) {
-    await appendViaWebhook(payload, webhookUrl);
-    return "google_sheets_webhook";
+    try {
+      await appendViaWebhook(payload, webhookUrl);
+      return "google_sheets_webhook";
+    } catch (error) {
+      console.error("Google Sheets webhook failed. Registration accepted as a fallback.", {
+        error,
+        registration: payload,
+      });
+      return "vercel_log";
+    }
   }
 
-  const stored = await appendViaServiceAccount(payload);
-  if (stored) return "google_sheets_service_account";
+  try {
+    const stored = await appendViaServiceAccount(payload);
+    if (stored) return "google_sheets_service_account";
+  } catch (error) {
+    console.error("Google Sheets service account failed. Registration accepted as a fallback.", {
+      error,
+      registration: payload,
+    });
+    return "vercel_log";
+  }
 
   console.warn("Google Sheets is not configured. Registration accepted but not persisted.", {
     registration: payload,
