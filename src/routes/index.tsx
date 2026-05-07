@@ -1,6 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { Lock, MessageCircle, Brain, Search, Minus, Plus, Check, User } from "lucide-react";
+import {
+  MessageCircle,
+  Brain,
+  Search,
+  Minus,
+  Plus,
+  Check,
+  Sparkles,
+  Map,
+  Target,
+  Compass,
+} from "lucide-react";
+import yuliaPhoto from "@/assets/yulia.jpg";
+import stafflowLogo from "@/assets/stafflow-logo.png";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -40,38 +53,51 @@ function Index() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Navbar */}
-      <header className="mx-auto flex max-w-5xl flex-col items-start justify-between gap-3 px-6 py-6 sm:flex-row sm:items-center">
-        <div className="text-lg font-semibold tracking-tight">Stafflow</div>
-        <div
-          className="inline-flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs sm:text-sm"
-          style={{ backgroundColor: "var(--card)", color: "var(--primary)" }}
-        >
-          <Lock className="h-3.5 w-3.5" />
-          <span>Закрытое мероприятие · Только для сообщества Stafflow</span>
-        </div>
+      <header className="mx-auto flex max-w-5xl items-center justify-between px-6 py-6">
+        <div className="text-lg font-semibold tracking-tight">Закрытый воркшоп</div>
+        <img src={stafflowLogo} alt="Stafflow" className="h-5 w-auto sm:h-6" />
       </header>
 
       {/* Hero */}
-      <section className="mx-auto max-w-3xl px-6 pt-12 pb-16 text-center sm:pt-20 sm:pb-24">
-        <h1 className="text-3xl font-semibold tracking-tight sm:text-5xl sm:leading-[1.1]">
-          Закрытый воркшоп для сообщества Stafflow
+      <section className="mx-auto max-w-3xl px-6 pt-10 pb-16 text-center sm:pt-16 sm:pb-24">
+        <div
+          className="mb-6 inline-block text-xs font-medium uppercase tracking-[0.2em]"
+          style={{ color: "var(--primary)" }}
+        >
+          Воркшоп для сообщества Stafflow
+        </div>
+        <h1
+          className="text-4xl font-semibold tracking-tight sm:text-6xl sm:leading-[1.05]"
+          style={{
+            background:
+              "linear-gradient(135deg, var(--primary) 0%, color-mix(in oklab, var(--primary) 60%, var(--foreground)) 100%)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text",
+          }}
+        >
+          Ключ к сердцу и&nbsp;логике собственника
         </h1>
-        <p className="mt-5 text-base text-muted-foreground sm:text-lg">
-          Ключ к сердцу и логике собственника
+        <p className="mt-6 text-base text-muted-foreground sm:text-lg">
+          Закрытый воркшоп с Юлией Карват — о том, как HR-партнёру быть услышанным
+          на уровне C-level.
         </p>
 
         <div
-          className="mx-auto mt-10 max-w-md rounded-xl bg-card px-6 py-5 text-left"
+          className="mx-auto mt-10 flex max-w-md items-center gap-4 rounded-xl bg-card p-4 text-left"
           style={{ boxShadow: "var(--shadow-soft)" }}
         >
-          <div className="text-base font-medium">Юлия Карват</div>
-          <div className="mt-1 text-sm text-muted-foreground">
-            Корпоративный тренер · HR-эксперт · Магистр психологических наук
+          <img
+            src={yuliaPhoto}
+            alt="Юлия Карват"
+            className="h-14 w-14 shrink-0 rounded-full object-cover"
+          />
+          <div>
+            <div className="text-base font-medium">Юлия Карват</div>
+            <div className="mt-0.5 text-xs text-muted-foreground">
+              Корпоративный тренер · HR-эксперт
+            </div>
           </div>
-        </div>
-
-        <div className="mt-8 inline-flex items-center rounded-xl bg-primary px-4 py-2 text-xs font-medium text-primary-foreground sm:text-sm">
-          Доступно только участникам сообщества Stafflow
         </div>
       </section>
 
@@ -112,17 +138,119 @@ function Index() {
         </p>
       </section>
 
+      {/* Program */}
+      <section className="mx-auto max-w-3xl px-6 pb-20">
+        <div className="text-center">
+          <div
+            className="mb-3 inline-block text-xs font-medium uppercase tracking-[0.2em]"
+            style={{ color: "var(--primary)" }}
+          >
+            Программа
+          </div>
+          <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+            Как пройдёт воркшоп
+          </h2>
+          <p className="mx-auto mt-4 max-w-xl text-sm text-muted-foreground">
+            Шесть последовательных блоков — от понимания себя до конкретного
+            roadmap взаимодействия с собственником.
+          </p>
+        </div>
+
+        <ol className="mt-10 space-y-3">
+          {[
+            "Личность HR: ценности и границы",
+            "Типология HR. Самодиагностика",
+            "Типология собственников",
+            "Матрица совместимости HR и бизнеса",
+            "Непонимание vs. деструктивность",
+            "Roadmap: «Как быть услышанным»",
+          ].map((item, i) => (
+            <li
+              key={i}
+              className="flex items-center gap-4 rounded-xl bg-card px-5 py-4"
+              style={{ boxShadow: "var(--shadow-soft)" }}
+            >
+              <span
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sm font-semibold"
+                style={{
+                  backgroundColor: "color-mix(in oklab, var(--primary) 12%, white)",
+                  color: "var(--primary)",
+                }}
+              >
+                {i + 1}
+              </span>
+              <span className="text-sm font-medium sm:text-base">{item}</span>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      {/* Benefits */}
+      <section className="mx-auto max-w-5xl px-6 pb-20">
+        <div className="text-center">
+          <div
+            className="mb-3 inline-block text-xs font-medium uppercase tracking-[0.2em]"
+            style={{ color: "var(--primary)" }}
+          >
+            Что вы получите
+          </div>
+          <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+            Зачем приходить
+          </h2>
+        </div>
+
+        <div className="mt-10 grid gap-5 md:grid-cols-2">
+          {[
+            {
+              icon: <Sparkles className="h-5 w-5" style={{ color: "var(--primary)" }} />,
+              title: "Понимание себя как HR",
+              text: "Самодиагностика по типологии: свои сильные стороны, зоны риска и точки роста в роли HR-партнёра.",
+            },
+            {
+              icon: <Compass className="h-5 w-5" style={{ color: "var(--primary)" }} />,
+              title: "Карта собственников",
+              text: "Научитесь распознавать тип собственника и подбирать язык, на котором он действительно вас услышит.",
+            },
+            {
+              icon: <Target className="h-5 w-5" style={{ color: "var(--primary)" }} />,
+              title: "Матрица совместимости",
+              text: "Поймёте, где ваш диалог с бизнесом может работать, а где это системный конфликт, который не решить уговорами.",
+            },
+            {
+              icon: <Map className="h-5 w-5" style={{ color: "var(--primary)" }} />,
+              title: "Личный roadmap",
+              text: "Конкретный план шагов: как перестроить коммуникацию с собственником и быть услышанным на уровне решений.",
+            },
+          ].map((b, i) => (
+            <div
+              key={i}
+              className="rounded-xl bg-card p-6"
+              style={{ boxShadow: "var(--shadow-soft)" }}
+            >
+              <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-background">
+                {b.icon}
+              </div>
+              <h3 className="text-base font-semibold">{b.title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{b.text}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* Speaker */}
       <section className="mx-auto max-w-4xl px-6 pb-20">
         <div className="grid items-center gap-8 sm:grid-cols-[auto_1fr] sm:gap-12">
-          <div
-            className="mx-auto flex h-36 w-36 items-center justify-center rounded-full bg-card sm:h-44 sm:w-44"
+          <img
+            src={yuliaPhoto}
+            alt="Юлия Карват"
+            className="mx-auto h-44 w-44 rounded-full object-cover sm:h-52 sm:w-52"
             style={{ boxShadow: "var(--shadow-soft)" }}
-          >
-            <User className="h-14 w-14" style={{ color: "var(--primary)" }} />
-          </div>
+          />
           <div>
             <h3 className="text-2xl font-semibold tracking-tight">Юлия Карват</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Корпоративный тренер · HR-эксперт · Магистр психологических наук
+            </p>
             <ul className="mt-5 space-y-3 text-sm text-foreground/90">
               {[
                 "12+ лет рефакторинга команд и процессов",
