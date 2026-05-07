@@ -12,7 +12,18 @@ import {
   Target,
   Compass,
   Send,
+  Calendar,
+  MapPin,
+  Clock,
 } from "lucide-react";
+
+const CALENDAR_URL =
+  "https://www.google.com/calendar/render?action=TEMPLATE" +
+  "&text=" + encodeURIComponent("Практический воркшоп от Stafflow") +
+  "&dates=20260521T093000/20260521T113000" +
+  "&ctz=Europe/Minsk" +
+  "&location=" + encodeURIComponent("г. Минск, ул. Шаранговича 4, Центр притяжения Igrow") +
+  "&details=" + encodeURIComponent("Закрытый воркшоп для сообщества Stafflow с Юлией Карват.");
 import yuliaPhoto from "@/assets/yulia.jpg";
 import stafflowLogo from "@/assets/stafflow-logo.png";
 import { supabase } from "@/integrations/supabase/client";
