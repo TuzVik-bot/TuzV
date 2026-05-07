@@ -12,7 +12,18 @@ import {
   Target,
   Compass,
   Send,
+  Calendar,
+  MapPin,
+  Clock,
 } from "lucide-react";
+
+const CALENDAR_URL =
+  "https://www.google.com/calendar/render?action=TEMPLATE" +
+  "&text=" + encodeURIComponent("Практический воркшоп от Stafflow") +
+  "&dates=20260521T093000/20260521T113000" +
+  "&ctz=Europe/Minsk" +
+  "&location=" + encodeURIComponent("г. Минск, ул. Шаранговича 4, Центр притяжения Igrow") +
+  "&details=" + encodeURIComponent("Закрытый воркшоп для сообщества Stafflow с Юлией Карват.");
 import yuliaPhoto from "@/assets/yulia.jpg";
 import stafflowLogo from "@/assets/stafflow-logo.png";
 import { supabase } from "@/integrations/supabase/client";
@@ -378,6 +389,78 @@ function Index() {
                 Telegram-канал HR Kuluar
               </a>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Place & Time */}
+      <section className="relative mx-auto max-w-3xl px-6 pb-16">
+        <div
+          className="relative overflow-hidden rounded-3xl border bg-card/80 p-6 backdrop-blur sm:p-10"
+          style={{
+            boxShadow: "var(--shadow-elevated)",
+            borderColor: "color-mix(in oklab, var(--primary) 15%, transparent)",
+          }}
+        >
+          <div
+            aria-hidden
+            className="absolute -bottom-20 -left-20 h-48 w-48 rounded-full opacity-40 blur-3xl"
+            style={{
+              background:
+                "radial-gradient(circle, color-mix(in oklab, var(--primary) 50%, transparent), transparent)",
+            }}
+          />
+          <div className="relative grid gap-6 sm:grid-cols-2">
+            <div className="flex items-start gap-4">
+              <div
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white shadow-lg"
+                style={{ background: "linear-gradient(135deg, var(--primary), #8b5cf6)" }}
+              >
+                <Clock className="h-5 w-5" />
+              </div>
+              <div>
+                <div className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                  Когда
+                </div>
+                <div className="mt-1 text-base font-semibold sm:text-lg">
+                  21 мая (четверг), 09:30
+                </div>
+              </div>
+            </div>
+            <div className="flex items-start gap-4">
+              <div
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white shadow-lg"
+                style={{ background: "linear-gradient(135deg, #8b5cf6, #ec4899)" }}
+              >
+                <MapPin className="h-5 w-5" />
+              </div>
+              <div>
+                <div className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                  Где
+                </div>
+                <div className="mt-1 text-base font-semibold sm:text-lg">
+                  г. Минск, ул. Шаранговича 4
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  Центр притяжения Igrow
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="relative mt-6 flex justify-center">
+            <a
+              href={CALENDAR_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-full border bg-background px-5 py-2.5 text-sm font-medium transition hover:border-[var(--primary)] hover:-translate-y-0.5"
+              style={{
+                borderColor: "color-mix(in oklab, var(--primary) 25%, transparent)",
+                boxShadow: "var(--shadow-soft)",
+              }}
+            >
+              <Calendar className="h-4 w-4" style={{ color: "var(--primary)" }} />
+              Добавить в Google-Календарь
+            </a>
           </div>
         </div>
       </section>
