@@ -30,12 +30,11 @@ function normalizePrivateKey(privateKey: string) {
 }
 
 function base64UrlEncode(input: string | Uint8Array) {
-  const bytes = typeof input === "string" ? new TextEncoder().encode(input) : input;
-  let binary = "";
-  for (const byte of bytes) {
-    binary += String.fromCharCode(byte);
-  }
-  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+  return Buffer.from(input)
+    .toString("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/g, "");
 }
 
 function pemToArrayBuffer(pem: string) {
@@ -43,12 +42,7 @@ function pemToArrayBuffer(pem: string) {
     .replace(/-----BEGIN PRIVATE KEY-----/g, "")
     .replace(/-----END PRIVATE KEY-----/g, "")
     .replace(/\s/g, "");
-  const binary = atob(base64);
-  const bytes = new Uint8Array(binary.length);
-  for (let index = 0; index < binary.length; index += 1) {
-    bytes[index] = binary.charCodeAt(index);
-  }
-  return bytes.buffer;
+  return Buffer.from(base64, "base64");
 }
 
 async function signJwt(serviceAccountEmail: string, privateKey: string) {

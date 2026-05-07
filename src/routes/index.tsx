@@ -1,6 +1,3 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { createServerFn } from "@tanstack/react-start";
-import { getRequest } from "@tanstack/react-start/server";
 import { useState } from "react";
 import {
   MessageCircle,
@@ -39,65 +36,21 @@ type RegistrationInput = {
   attendeeCount: number;
 };
 
-const submitRegistration = createServerFn({ method: "POST" })
-  .inputValidator((data: RegistrationInput) => {
-    const name = data.name.trim();
-    const company = data.company?.trim() || "";
-    const attendeeCount = Number.isFinite(data.attendeeCount)
-      ? Math.min(Math.max(Math.trunc(data.attendeeCount), 1), 5)
-      : 1;
-
-    if (!name) {
-      throw new Error("Name is required");
-    }
-
-    if (data.status !== "yes" && data.status !== "no") {
-      throw new Error("Status is required");
-    }
-
-    return {
-      name,
-      company,
-      status: data.status,
-      attendeeCount: data.status === "yes" ? attendeeCount : 1,
-    };
-  })
-  .handler(async ({ data }) => {
-    const { appendRegistrationToGoogleSheet } = await import("@/lib/google-sheets.server");
-    const request = getRequest();
-    const userAgent = request?.headers.get("user-agent") || "";
-    const ip =
-      request?.headers.get("cf-connecting-ip") ||
-      request?.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-      "";
-
-    await appendRegistrationToGoogleSheet({
-      name: data.name,
-      company: data.company,
-      status: data.status,
-      attendeeCount: data.attendeeCount,
-      userAgent,
-      ip,
-    });
-
-    return { ok: true };
+async function submitRegistration(data: RegistrationInput) {
+  const response = await fetch("/api/registrations", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+    },
+    body: JSON.stringify(data),
   });
 
-export const Route = createFileRoute("/")({
-  component: Index,
-  head: () => ({
-    meta: [
-      { title: "Закрытый воркшоп · Stafflow" },
-      {
-        name: "description",
-        content:
-          "Закрытый воркшоп для сообщества Stafflow с Юлией Карват. Подтвердите своё участие.",
-      },
-    ],
-  }),
-});
+  if (!response.ok) {
+    throw new Error(await response.text());
+  }
+}
 
-function Index() {
+export default function Index() {
   const [name, setName] = useState("");
   const [company, setCompany] = useState("");
   const [status, setStatus] = useState<"yes" | "no" | "">("");
@@ -121,12 +74,10 @@ function Index() {
     setSubmitting(true);
     try {
       await submitRegistration({
-        data: {
-          name,
-          company,
-          status,
-          attendeeCount: status === "yes" ? count : 1,
-        },
+        name,
+        company,
+        status,
+        attendeeCount: status === "yes" ? count : 1,
       });
     } catch (error) {
       console.error(error);
