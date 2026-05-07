@@ -1,4 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { createServerFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
 import { useState } from "react";
 import {
   MessageCircle,
@@ -19,14 +21,67 @@ import {
 
 const CALENDAR_URL =
   "https://www.google.com/calendar/render?action=TEMPLATE" +
-  "&text=" + encodeURIComponent("Практический воркшоп от Stafflow") +
+  "&text=" +
+  encodeURIComponent("Практический воркшоп от Stafflow") +
   "&dates=20260521T093000/20260521T113000" +
   "&ctz=Europe/Minsk" +
-  "&location=" + encodeURIComponent("г. Минск, ул. Шаранговича 4, Центр притяжения Igrow") +
-  "&details=" + encodeURIComponent("Закрытый воркшоп для сообщества Stafflow с Юлией Карват.");
+  "&location=" +
+  encodeURIComponent("г. Минск, ул. Шаранговича 4, Центр притяжения Igrow") +
+  "&details=" +
+  encodeURIComponent("Закрытый воркшоп для сообщества Stafflow с Юлией Карват.");
 import yuliaPhoto from "@/assets/yulia.jpg";
 import stafflowLogo from "@/assets/stafflow-logo.png";
-import { supabase } from "@/integrations/supabase/client";
+
+type RegistrationInput = {
+  name: string;
+  company?: string;
+  status: "yes" | "no";
+  attendeeCount: number;
+};
+
+const submitRegistration = createServerFn({ method: "POST" })
+  .inputValidator((data: RegistrationInput) => {
+    const name = data.name.trim();
+    const company = data.company?.trim() || "";
+    const attendeeCount = Number.isFinite(data.attendeeCount)
+      ? Math.min(Math.max(Math.trunc(data.attendeeCount), 1), 5)
+      : 1;
+
+    if (!name) {
+      throw new Error("Name is required");
+    }
+
+    if (data.status !== "yes" && data.status !== "no") {
+      throw new Error("Status is required");
+    }
+
+    return {
+      name,
+      company,
+      status: data.status,
+      attendeeCount: data.status === "yes" ? attendeeCount : 1,
+    };
+  })
+  .handler(async ({ data }) => {
+    const { appendRegistrationToGoogleSheet } = await import("@/lib/google-sheets.server");
+    const request = getRequest();
+    const userAgent = request?.headers.get("user-agent") || "";
+    const ip =
+      request?.headers.get("cf-connecting-ip") ||
+      request?.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      "";
+
+    await appendRegistrationToGoogleSheet({
+      name: data.name,
+      company: data.company,
+      status: data.status,
+      attendeeCount: data.attendeeCount,
+      userAgent,
+      ip,
+    });
+
+    return { ok: true };
+  });
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -64,17 +119,22 @@ function Index() {
     setErrors({});
     setSubmitError(null);
     setSubmitting(true);
-    const { error } = await supabase.from("registrations").insert({
-      name: name.trim(),
-      company: company.trim() || null,
-      status,
-      attendee_count: status === "yes" ? count : 1,
-    });
-    setSubmitting(false);
-    if (error) {
+    try {
+      await submitRegistration({
+        data: {
+          name,
+          company,
+          status,
+          attendeeCount: status === "yes" ? count : 1,
+        },
+      });
+    } catch (error) {
+      console.error(error);
+      setSubmitting(false);
       setSubmitError("Не удалось отправить. Попробуйте ещё раз.");
       return;
     }
+    setSubmitting(false);
     setSubmitted(true);
   };
 
@@ -101,8 +161,7 @@ function Index() {
         aria-hidden
         className="pointer-events-none absolute bottom-0 -left-32 h-[360px] w-[360px] rounded-full opacity-40 blur-3xl"
         style={{
-          background:
-            "radial-gradient(circle, #ffd6e8 0%, transparent 70%)",
+          background: "radial-gradient(circle, #ffd6e8 0%, transparent 70%)",
         }}
       />
 
@@ -121,14 +180,16 @@ function Index() {
             backgroundColor: "color-mix(in oklab, var(--primary) 6%, white)",
           }}
         >
-          <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ backgroundColor: "var(--primary)" }} />
+          <span
+            className="inline-block h-1.5 w-1.5 rounded-full"
+            style={{ backgroundColor: "var(--primary)" }}
+          />
           Воркшоп для сообщества Stafflow
         </div>
         <h1
           className="text-4xl font-semibold tracking-tight sm:text-6xl sm:leading-[1.05]"
           style={{
-            background:
-              "linear-gradient(135deg, var(--primary) 0%, #8b5cf6 50%, #ec4899 100%)",
+            background: "linear-gradient(135deg, var(--primary) 0%, #8b5cf6 50%, #ec4899 100%)",
             WebkitBackgroundClip: "text",
             WebkitTextFillColor: "transparent",
             backgroundClip: "text",
@@ -137,8 +198,8 @@ function Index() {
           Ключ к сердцу и&nbsp;логике собственника
         </h1>
         <p className="mt-6 text-base text-muted-foreground sm:text-lg">
-          Закрытый воркшоп с Юлией Карват — о том, как HR-партнёру быть услышанным
-          на уровне C-level.
+          Закрытый воркшоп с Юлией Карват — о том, как HR-партнёру быть услышанным на уровне
+          C-level.
         </p>
 
         <div
@@ -204,8 +265,7 @@ function Index() {
               <div
                 className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl shadow-lg"
                 style={{
-                  background:
-                    "linear-gradient(135deg, var(--primary), #8b5cf6)",
+                  background: "linear-gradient(135deg, var(--primary), #8b5cf6)",
                   boxShadow: "0 8px 20px -8px var(--primary)",
                 }}
               >
@@ -229,12 +289,10 @@ function Index() {
           >
             Программа
           </div>
-          <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-            Как пройдёт воркшоп
-          </h2>
+          <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">Как пройдёт воркшоп</h2>
           <p className="mx-auto mt-4 max-w-xl text-sm text-muted-foreground">
-            Шесть последовательных блоков — от понимания себя до конкретного
-            roadmap взаимодействия с собственником.
+            Шесть последовательных блоков — от понимания себя до конкретного roadmap взаимодействия
+            с собственником.
           </p>
         </div>
 
@@ -258,8 +316,7 @@ function Index() {
               <span
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-bold text-white shadow-md"
                 style={{
-                  background:
-                    "linear-gradient(135deg, var(--primary), #8b5cf6)",
+                  background: "linear-gradient(135deg, var(--primary), #8b5cf6)",
                 }}
               >
                 {i + 1}
@@ -279,9 +336,7 @@ function Index() {
           >
             Что вы получите
           </div>
-          <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-            Зачем приходить
-          </h2>
+          <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">Зачем приходить</h2>
         </div>
 
         <div className="mt-10 grid gap-5 md:grid-cols-2">
@@ -347,8 +402,7 @@ function Index() {
                 aria-hidden
                 className="absolute -inset-2 rounded-full blur-xl opacity-60"
                 style={{
-                  background:
-                    "linear-gradient(135deg, var(--primary), #ec4899)",
+                  background: "linear-gradient(135deg, var(--primary), #ec4899)",
                 }}
               />
               <img
@@ -441,9 +495,7 @@ function Index() {
                 <div className="mt-1 text-base font-semibold sm:text-lg">
                   г. Минск, ул. Шаранговича 4
                 </div>
-                <div className="text-sm text-muted-foreground">
-                  Центр притяжения Igrow
-                </div>
+                <div className="text-sm text-muted-foreground">Центр притяжения Igrow</div>
               </div>
             </div>
           </div>
@@ -597,7 +649,9 @@ function Index() {
               )}
 
               {submitError && (
-                <p className="text-sm" style={{ color: "#ef4444" }}>{submitError}</p>
+                <p className="text-sm" style={{ color: "#ef4444" }}>
+                  {submitError}
+                </p>
               )}
 
               <button
@@ -605,8 +659,7 @@ function Index() {
                 disabled={submitting}
                 className="w-full rounded-xl px-6 py-3.5 text-sm font-medium text-white shadow-lg transition hover:brightness-110 disabled:opacity-60 sm:w-auto sm:min-w-56"
                 style={{
-                  background:
-                    "linear-gradient(135deg, var(--primary), #8b5cf6)",
+                  background: "linear-gradient(135deg, var(--primary), #8b5cf6)",
                   boxShadow: "0 10px 24px -10px var(--primary)",
                 }}
               >
